@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: crowd-management-api
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/crowd-management
+
+server:
+  port: 8081
+
+
