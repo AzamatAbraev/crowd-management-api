@@ -1,5 +1,7 @@
 package com.crowdmanagement.crowdmanagementapi;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -9,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class DemoController {
 
     @GetMapping("/message")
-    public String getDemoMessage() {
-        return "This is demo message";
+    public String getDemoMessage(@AuthenticationPrincipal Jwt jwt) {
+        return String.format("Hello, %s! This is intended message", jwt.getClaimAsString("preferred_username"));
     }
 }

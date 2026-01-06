@@ -2,6 +2,10 @@ spring:
   application:
     name: crowd-management-api
 
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: false
+
   security:
     oauth2:
       resourceserver:
@@ -10,5 +14,7 @@ spring:
 
 server:
   port: 8081
-
-
+  compression:
+    enabled: true
+#    mime-types: application/json
+#    min-response-size: 1024
