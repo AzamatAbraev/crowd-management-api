@@ -2,9 +2,10 @@ package com.crowdmanagement.crowdmanagementapi.timetable;
 
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import jakarta.annotation.PostConstruct;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import java.io.File;
+import java.time.LocalDate;
+import java.time.format.TextStyle;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -26,6 +27,9 @@ public class TimetableService {
 
     public void refreshTimetable() throws Exception {
         XmlMapper xmlMapper = new XmlMapper();
+        xmlMapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
+        xmlMapper.disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
         File file = new File("src/main/resources/timetable.xml");
         TimetableXml data = xmlMapper.readValue(file, TimetableXml.class);
 
@@ -77,8 +81,16 @@ public class TimetableService {
     public List<TimetableEntry> getFilteredTimetable(String day, String className,
                                                      String teacher, String subject,
                                                      String classroom) {
+        if (cachedTimetable.isEmpty()) {
+            throw new RuntimeException("Timetable data is not yet loaded.");
+        }
+
+        final String targetDay = (day == null || day.isEmpty())
+                ? LocalDate.now().getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.ENGLISH)
+                : day;
+
         return cachedTimetable.stream()
-                .filter(entry -> day == null || entry.getDay().equalsIgnoreCase(day))
+                .filter(entry -> entry.getDay().equalsIgnoreCase(targetDay))
                 .filter(entry -> className == null || entry.getClassName().toLowerCase().contains(className.toLowerCase()))
                 .filter(entry -> teacher == null || entry.getTeacherName().toLowerCase().contains(teacher.toLowerCase()))
                 .filter(entry -> subject == null || entry.getSubject().toLowerCase().contains(subject.toLowerCase()))
@@ -86,7 +98,6 @@ public class TimetableService {
                 .collect(Collectors.toList());
     }
 
-    // Helper to turn "ID1,ID2" into "Name1, Name2"
     private String resolveNames(String ids, Map<String, String> lookup) {
         if (ids == null || ids.isEmpty()) return "N/A";
         return Arrays.stream(ids.split(","))

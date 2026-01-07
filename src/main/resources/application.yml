@@ -5,6 +5,11 @@ spring:
   jackson:
     deserialization:
       fail-on-unknown-properties: false
+    datatype:
+      datetime:
+        write-dates-as-timestamps: false
+    date-format: yyyy-MM-dd HH:mm:ss
+
 
   security:
     oauth2:
@@ -16,5 +21,5 @@ server:
   port: 8081
   compression:
     enabled: true
-#    mime-types: application/json
-#    min-response-size: 1024
+    mime-types: application/json
+    min-response-size: 1024
