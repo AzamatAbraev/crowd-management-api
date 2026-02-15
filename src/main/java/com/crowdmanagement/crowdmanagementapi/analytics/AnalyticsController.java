@@ -5,10 +5,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/analytics/")
+@RequestMapping("/api/v1/resources/")
 public class AnalyticsController {
 
-    @GetMapping("")
+    @GetMapping("analytics")
     public String getData() {
         return "Analytics data";
     }

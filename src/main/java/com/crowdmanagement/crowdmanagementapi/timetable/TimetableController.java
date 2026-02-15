@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/timetable")
+@RequestMapping("/api/v1/resources/")
 @CrossOrigin(origins = "*") // Allows your web app to connect
 public class TimetableController {
 
@@ -21,7 +21,7 @@ public class TimetableController {
         this.service = service;
     }
 
-    @GetMapping(path = "")
+    @GetMapping(path = "timetable")
     public ResponseEntity<ApiResponse> getTimetable(@RequestParam(required = false) String day,
                                                                 @RequestParam(required = false) String className,
                                                                 @RequestParam(required = false) String teacher,
