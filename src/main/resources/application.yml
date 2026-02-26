@@ -23,3 +23,8 @@ server:
     enabled: true
     mime-types: application/json
     min-response-size: 1024
+
+logging:
+  level:
+    org.eclipse.paho.client.mqttv3: DEBUG
+    org.springframework.integration.mqtt: DEBUG

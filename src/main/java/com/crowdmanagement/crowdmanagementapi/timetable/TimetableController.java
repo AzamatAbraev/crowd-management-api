@@ -12,7 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/resources/")
-@CrossOrigin(origins = "*") // Allows your web app to connect
+@CrossOrigin(origins = "*")
 public class TimetableController {
 
     private final TimetableService service;

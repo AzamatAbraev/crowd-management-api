@@ -1,0 +1,25 @@
+package com.crowdmanagement.crowdmanagementapi.iot;
+
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/v1/people")
+public class PeopleCountController {
+
+    private final PeopleCountService peopleCountService;
+
+    public PeopleCountController(PeopleCountService peopleCountService) {
+        this.peopleCountService = peopleCountService;
+    }
+
+    @GetMapping(path = "/count", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Map<String, Integer> getLatestCount() {
+        // Returns {"count": 12}
+        return Map.of("count", peopleCountService.getCurrentCount());
+    }
+}
