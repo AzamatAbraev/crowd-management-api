@@ -80,22 +80,31 @@ public class TimetableService {
 
     public List<TimetableEntry> getFilteredTimetable(String day, String className,
                                                      String teacher, String subject,
-                                                     String classroom) {
+                                                     String classroom, String startTime, String endTime ) {
         if (cachedTimetable.isEmpty()) {
             throw new RuntimeException("Timetable data is not yet loaded.");
         }
 
-        final String targetDay = (day == null || day.isEmpty())
-                ? LocalDate.now().getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.ENGLISH)
-                : day;
-
         return cachedTimetable.stream()
-                .filter(entry -> entry.getDay().equalsIgnoreCase(targetDay))
-                .filter(entry -> className == null || entry.getClassName().toLowerCase().contains(className.toLowerCase()))
-                .filter(entry -> teacher == null || entry.getTeacherName().toLowerCase().contains(teacher.toLowerCase()))
-                .filter(entry -> subject == null || entry.getSubject().toLowerCase().contains(subject.toLowerCase()))
-                .filter(entry -> classroom == null || entry.getClassroom().equalsIgnoreCase(classroom))
+                .filter(e -> (day == null || day.isEmpty()) || e.getDay().equalsIgnoreCase(day))
+                .filter(e -> (teacher == null || teacher.isEmpty()) || e.getTeacherName().equalsIgnoreCase(teacher))
+                .filter(e -> (startTime == null || startTime.isEmpty()) || e.getStartTime().startsWith(startTime))
+                .filter(e -> (endTime == null || endTime.isEmpty()) || e.getEndTime().startsWith(endTime))
+                .filter(e -> (classroom == null || classroom.isEmpty()) || e.getClassroom().equalsIgnoreCase(classroom))
+                .filter(e -> (subject == null || subject.isEmpty()) || e.getSubject().equalsIgnoreCase(subject))
+                .filter(e -> (className == null || className.isEmpty()) || e.getClassName().toLowerCase().contains(className.toLowerCase()))
                 .collect(Collectors.toList());
+    }
+
+    public Map<String, List<String>> getTimetableMetadata() {
+        Map<String, List<String>> meta = new HashMap<>();
+        meta.put("subjects", cachedTimetable.stream().map(TimetableEntry::getSubject).distinct().sorted().collect(Collectors.toList()));
+        meta.put("teachers", cachedTimetable.stream().map(TimetableEntry::getTeacherName).distinct().sorted().collect(Collectors.toList()));
+        meta.put("classrooms", cachedTimetable.stream().map(TimetableEntry::getClassroom).distinct().sorted().collect(Collectors.toList()));
+        meta.put("classes", cachedTimetable.stream().map(TimetableEntry::getClassName).distinct().sorted().collect(Collectors.toList()));
+        meta.put("times", cachedTimetable.stream().map(TimetableEntry::getStartTime).distinct().sorted().collect(Collectors.toList()));
+        meta.put("endTimes", cachedTimetable.stream().map(TimetableEntry::getEndTime).distinct().sorted().collect(Collectors.toList()));
+        return meta;
     }
 
     private String resolveNames(String ids, Map<String, String> lookup) {

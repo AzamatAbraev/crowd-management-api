@@ -19,7 +19,6 @@ public class PeopleCountController {
 
     @GetMapping(path = "/count", produces = MediaType.APPLICATION_JSON_VALUE)
     public Map<String, Integer> getLatestCount() {
-        // Returns {"count": 12}
         return Map.of("count", peopleCountService.getCurrentCount());
     }
 }

@@ -23,7 +23,8 @@ import java.nio.charset.StandardCharsets;
 @EnableIntegration
 public class MqttConfig {
 
-    private static final String BROKER_URL = "tcp://172.26.164.80:1883";
+//    private static final String BROKER_URL = "tcp://172.26.164.80:1883"; without docker
+    private static final String BROKER_URL = "tcp://172.26.164.80:1883"; // eclipse mqtt broker with docker -> command: ip addr | grep inet: -> choose global scope eth
     private static final String TOPIC = "building1/entrance/ultrasonic/count";
     private static final String CLIENT_ID = "spring-backend-counter";
 
