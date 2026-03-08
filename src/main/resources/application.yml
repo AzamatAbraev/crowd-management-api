@@ -28,3 +28,6 @@ logging:
   level:
     org.eclipse.paho.client.mqttv3: DEBUG
     org.springframework.integration.mqtt: DEBUG
+#    com.crowdmanagement: DEBUG
+#    org.eclipse.paho: INFO
+#    org.springframework.integration: INFO

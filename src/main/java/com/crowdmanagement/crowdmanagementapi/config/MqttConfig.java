@@ -3,148 +3,83 @@ package com.crowdmanagement.crowdmanagementapi.config;
 import com.crowdmanagement.crowdmanagementapi.iot.PeopleCountService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.eclipse.paho.client.mqttv3.IMqttClient;
+import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.integration.annotation.ServiceActivator;
-import org.springframework.integration.channel.DirectChannel;
-import org.springframework.integration.config.EnableIntegration;
-import org.springframework.integration.core.MessageProducer;
-import org.springframework.integration.mqtt.core.DefaultMqttPahoClientFactory;
-import org.springframework.integration.mqtt.core.MqttPahoClientFactory;
-import org.springframework.integration.mqtt.inbound.MqttPahoMessageDrivenChannelAdapter;
-import org.springframework.integration.mqtt.support.DefaultPahoMessageConverter;
-import org.springframework.messaging.MessageChannel;
-import org.springframework.messaging.MessageHandler;
 
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 @Configuration
-@EnableIntegration
 public class MqttConfig {
 
-//    private static final String BROKER_URL = "tcp://172.26.164.80:1883"; without docker
-    private static final String BROKER_URL = "tcp://172.26.164.80:1883"; // eclipse mqtt broker with docker -> command: ip addr | grep inet: -> choose global scope eth
-    private static final String TOPIC = "building1/entrance/ultrasonic/count";
-    private static final String CLIENT_ID = "spring-backend-counter";
+    private static final String BROKER_URL = "tcp://172.26.164.80:1883";
+    private static final String TOPIC = "building1/entrance/ultrasonic/#";
+
+    private static final String CLIENT_ID = "spring-backend-" + UUID.randomUUID().toString().substring(0, 8);
 
     private final PeopleCountService peopleCountService;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private static final Logger logger = LoggerFactory.getLogger(MqttConfig.class);
 
     public MqttConfig(PeopleCountService peopleCountService) {
         this.peopleCountService = peopleCountService;
     }
 
-    /* -------------------------------------------------
-       MQTT CONNECTION
-    ------------------------------------------------- */
-
     @Bean
-    public MqttPahoClientFactory mqttClientFactory() {
+    public IMqttClient mqttClient() {
+        try {
+            IMqttClient client = new MqttClient(BROKER_URL, CLIENT_ID, new MemoryPersistence());
 
-        DefaultMqttPahoClientFactory factory =
-                new DefaultMqttPahoClientFactory();
+            MqttConnectOptions options = new MqttConnectOptions();
+            options.setAutomaticReconnect(true);
+            options.setCleanSession(true);
+            options.setConnectionTimeout(10);
+            options.setKeepAliveInterval(20);
 
-        MqttConnectOptions options = new MqttConnectOptions();
+            logger.info("Connecting to MQTT broker at {}...", BROKER_URL);
+            client.connect(options);
+            logger.info("Connected successfully to MQTT!");
 
-        options.setServerURIs(new String[]{BROKER_URL});
-        options.setCleanSession(true);
-        options.setAutomaticReconnect(true);
-        options.setConnectionTimeout(10);
-        options.setKeepAliveInterval(20);
+            client.subscribe(TOPIC, 1, (topic, message) -> {
+                try {
+                    String payload = new String(message.getPayload(), StandardCharsets.UTF_8).trim().replace("\0", "");
 
-        factory.setConnectionOptions(options);
+                    if (payload.isEmpty()) return;
 
-        return factory;
-    }
+                    logger.debug("RAW PAYLOAD on {}: {}", topic, payload);
 
-    /* -------------------------------------------------
-       INTERNAL CHANNEL
-    ------------------------------------------------- */
+                    JsonNode json = objectMapper.readTree(payload);
 
-    @Bean(name = "mqttInputChannel")
-    public MessageChannel mqttInputChannel() {
-        return new DirectChannel();
-    }
+                    if (json.has("count") && json.has("device")) {
+                        int delta = json.get("count").asInt();
+                        String device = json.get("device").asText();
 
-    /* -------------------------------------------------
-       MQTT LISTENER (FORCED STARTUP)
-    ------------------------------------------------- */
+                        peopleCountService.updateCount(delta, device);
 
-    @Bean
-    public MessageProducer mqttInbound() {
+                        logger.info("SUCCESS | Device: {} | Delta: {} | Total: {}",
+                                device, delta, peopleCountService.getCurrentCount());
+                    } else {
+                        logger.warn("Received JSON without count/device on {}: {}", topic, payload);
+                    }
 
-        MqttPahoMessageDrivenChannelAdapter adapter =
-                new MqttPahoMessageDrivenChannelAdapter(
-                        CLIENT_ID,
-                        mqttClientFactory(),
-                        TOPIC
-                );
+                } catch (Exception e) {
+                    logger.error("FAILED to process message on {}: {}", topic, e.getMessage());
+                }
+            });
 
-        adapter.setCompletionTimeout(5000);
-        adapter.setQos(1);
-        adapter.setAutoStartup(true);          // 🔴 CRITICAL
-        adapter.setOutputChannel(mqttInputChannel());
+            logger.info("Subscribed to wildcard topic: {}", TOPIC);
 
-        DefaultPahoMessageConverter converter =
-                new DefaultPahoMessageConverter();
+            return client;
 
-        converter.setPayloadAsBytes(true);     // 🔴 FORCE byte[]
-        adapter.setConverter(converter);
-
-        System.out.println("MQTT Adapter initialized for topic: " + TOPIC);
-
-        return adapter;
-    }
-
-    /* -------------------------------------------------
-       MESSAGE PROCESSOR
-    ------------------------------------------------- */
-
-    @Bean
-    @ServiceActivator(inputChannel = "mqttInputChannel")
-    public MessageHandler mqttHandler() {
-
-        return message -> {
-
-            try {
-                /* ---------- Decode Payload ---------- */
-
-                byte[] payloadBytes = (byte[]) message.getPayload();
-
-                String payload = new String(
-                        payloadBytes,
-                        StandardCharsets.UTF_8
-                );
-
-                System.out.println("MQTT RECEIVED: " + payload);
-
-                /* ---------- Parse JSON ---------- */
-
-                JsonNode json = objectMapper.readTree(payload);
-
-                int delta = json.get("count").asInt();
-                String device = json.get("device").asText();
-
-                /* ---------- Update Counter ---------- */
-
-                peopleCountService.updateCount(delta);
-
-                int total = peopleCountService.getCurrentCount();
-
-                /* ---------- Log ---------- */
-
-                System.out.println(
-                        "[MQTT] Device=" + device +
-                                " Delta=" + delta +
-                                " Total=" + total
-                );
-
-            } catch (Exception e) {
-
-                System.err.println("MQTT PROCESSING FAILED");
-                e.printStackTrace();
-            }
-        };
+        } catch (Exception e) {
+            logger.error("CRITICAL ERROR initializing MQTT Client", e);
+            throw new RuntimeException("Failed to start MQTT", e);
+        }
     }
 }
