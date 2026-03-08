@@ -1,5 +1,6 @@
 package com.crowdmanagement.crowdmanagementapi.config;
 
+import com.crowdmanagement.crowdmanagementapi.device.DeviceService;
 import com.crowdmanagement.crowdmanagementapi.iot.PeopleCountService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,17 +19,19 @@ import java.util.UUID;
 @Configuration
 public class MqttConfig {
 
-    private static final String BROKER_URL = "tcp://172.26.164.80:1883";
+    private static final String BROKER_URL = "tcp://172.26.164.80:1883"; // [type command "ip addr | grep inet" in case address changes]
     private static final String TOPIC = "building1/entrance/ultrasonic/#";
 
     private static final String CLIENT_ID = "spring-backend-" + UUID.randomUUID().toString().substring(0, 8);
 
     private final PeopleCountService peopleCountService;
+    private final DeviceService deviceService;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private static final Logger logger = LoggerFactory.getLogger(MqttConfig.class);
 
-    public MqttConfig(PeopleCountService peopleCountService) {
+    public MqttConfig(PeopleCountService peopleCountService, DeviceService deviceService) {
         this.peopleCountService = peopleCountService;
+        this.deviceService = deviceService;
     }
 
     @Bean
@@ -60,7 +63,16 @@ public class MqttConfig {
                         int delta = json.get("count").asInt();
                         String device = json.get("device").asText();
 
+                        // 1. Update domain specific crowd count
                         peopleCountService.updateCount(delta, device);
+
+                        // 2. Manage IoT device lifecycle (heartbeat)
+                        deviceService.recordHeartbeat(device);
+                        
+                        // Optional: if the hardware team ever adds "battery": 90 to the JSON payload:
+                        if (json.has("battery")) {
+                            deviceService.updateBatteryLevel(device, json.get("battery").asInt());
+                        }
 
                         logger.info("SUCCESS | Device: {} | Delta: {} | Total: {}",
                                 device, delta, peopleCountService.getCurrentCount());
