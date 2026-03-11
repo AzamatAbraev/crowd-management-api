@@ -5,6 +5,7 @@ import com.crowdmanagement.crowdmanagementapi.utils.ResponseBuilder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -23,6 +24,7 @@ public class TimetableController {
     }
 
     @GetMapping(path = "timetable")
+    @PreAuthorize("hasRole('view-timetable')")
     public ResponseEntity<ApiResponse> getTimetable(@RequestParam(required = false) String day,
                                                                 @RequestParam(required = false) String className,
                                                                 @RequestParam(required = false) String teacher,
@@ -43,6 +45,7 @@ public class TimetableController {
     }
 
     @GetMapping("timetable/metadata")
+    @PreAuthorize("hasRole('view-timetable')")
     public ResponseEntity<ApiResponse> getTimetableMetadata() {
         Map<String, List<String>> metadata = service.getTimetableMetadata();
         return ResponseBuilder.build(HttpStatus.OK, "success", metadata);

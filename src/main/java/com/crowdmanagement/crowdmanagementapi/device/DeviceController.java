@@ -2,6 +2,7 @@ package com.crowdmanagement.crowdmanagementapi.device;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,12 +19,14 @@ public class DeviceController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('manage-devices')")
     public ResponseEntity<Device> registerDevice(@RequestBody Device device) {
         Device savedDevice = deviceService.registerDevice(device);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedDevice);
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('view-devices')")
     public ResponseEntity<List<Device>> getAllDevices(
             @RequestParam(required = false) DeviceType type,
             @RequestParam(required = false) DeviceStatus status) {
@@ -32,6 +35,7 @@ public class DeviceController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('view-devices')")
     public ResponseEntity<Device> getDeviceById(@PathVariable String id) {
         return deviceService.getDeviceById(id)
                 .map(ResponseEntity::ok)
@@ -39,6 +43,7 @@ public class DeviceController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('manage-devices')")
     public ResponseEntity<Device> updateDeviceDetails(@PathVariable String id, @RequestBody Device device) {
         try {
             Device updatedDevice = deviceService.updateDeviceDetails(id, device);
@@ -49,6 +54,7 @@ public class DeviceController {
     }
 
     @PatchMapping("/{id}/status")
+    @PreAuthorize("hasRole('manage-devices')")
     public ResponseEntity<Device> updateDeviceStatus(
             @PathVariable String id,
             @RequestBody Map<String, String> statusUpdate) {
@@ -64,6 +70,7 @@ public class DeviceController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('manage-devices')")
     public ResponseEntity<Void> deleteDevice(@PathVariable String id) {
         deviceService.deleteDevice(id);
         return ResponseEntity.noContent().build();

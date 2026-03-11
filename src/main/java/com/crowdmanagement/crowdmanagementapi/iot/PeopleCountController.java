@@ -1,6 +1,7 @@
 package com.crowdmanagement.crowdmanagementapi.iot;
 
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,6 +20,7 @@ public class PeopleCountController {
     }
 
     @GetMapping(path = "/count", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasRole('view-occupancy')")
     public Map<String, Object> getLatestCount() {
         return Map.of(
                 "count", peopleCountService.getCurrentCount(),
@@ -30,6 +32,7 @@ public class PeopleCountController {
     }
 
     @PostMapping("/reset")
+    @PreAuthorize("hasRole('reset-occupancy')")
     public Map<String, String> resetCount() {
         peopleCountService.reset();
         return Map.of("message", "Counter reset to 0 successfully");
