@@ -23,13 +23,14 @@ public class PeopleCountController {
     @PreAuthorize("hasRole('view-occupancy')")
     public Map<String, Object> getLatestCount() {
         return Map.of(
-                "count", peopleCountService.getCurrentCount(),
-                "lastDevice", peopleCountService.getLastDeviceName(),
+                "count",        peopleCountService.getCurrentCount(),
+                "lastDevice",   peopleCountService.getLastDeviceName(),
                 "systemStatus", "ACTIVE",
-                "activeNodes", 20,
+                "activeNodes",  peopleCountService.getDeviceCounts().size(),
                 "deviceCounts", peopleCountService.getDeviceCounts()
         );
     }
+
 
     @PostMapping("/reset")
     @PreAuthorize("hasRole('reset-occupancy')")

@@ -4,12 +4,14 @@ import com.crowdmanagement.crowdmanagementapi.device.DeviceService;
 import com.crowdmanagement.crowdmanagementapi.iot.PeopleCountService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.PreDestroy;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -19,15 +21,25 @@ import java.util.UUID;
 @Configuration
 public class MqttConfig {
 
-    private static final String BROKER_URL = "tcp://172.26.164.80:1883"; // [type command "ip addr | grep inet" in case address changes]
-    private static final String TOPIC = "building1/entrance/ultrasonic/#";
+    private static final Logger logger = LoggerFactory.getLogger(MqttConfig.class);
 
-    private static final String CLIENT_ID = "spring-backend-" + UUID.randomUUID().toString().substring(0, 8);
+    @Value("${mqtt.broker-url}")
+    private String brokerUrl;
+
+    @Value("${mqtt.telemetry-topic}")
+    private String telemetryTopic;
+
+    @Value("${mqtt.status-topic}")
+    private String statusTopic;
+
+    @Value("${mqtt.qos}")
+    private int qos;
+
+    private IMqttClient mqttClient;
 
     private final PeopleCountService peopleCountService;
     private final DeviceService deviceService;
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private static final Logger logger = LoggerFactory.getLogger(MqttConfig.class);
 
     public MqttConfig(PeopleCountService peopleCountService, DeviceService deviceService) {
         this.peopleCountService = peopleCountService;
@@ -35,63 +47,158 @@ public class MqttConfig {
     }
 
     @Bean
-    public IMqttClient mqttClient() {
-        try {
-            IMqttClient client = new MqttClient(BROKER_URL, CLIENT_ID, new MemoryPersistence());
+    public IMqttClient mqttClient() throws Exception {
+        // Use a random suffix so multiple instances (e.g. dev + test) don't
+        // conflict on the broker. Broker rejects duplicate client IDs.
+        String clientId = "spring-backend-" + UUID.randomUUID().toString().substring(0, 8);
 
-            MqttConnectOptions options = new MqttConnectOptions();
-            options.setAutomaticReconnect(true);
-            options.setCleanSession(true);
-            options.setConnectionTimeout(10);
-            options.setKeepAliveInterval(20);
+        mqttClient = new MqttClient(brokerUrl, clientId, new MemoryPersistence());
 
-            logger.info("Connecting to MQTT broker at {}...", BROKER_URL);
-            client.connect(options);
-            logger.info("Connected successfully to MQTT!");
+        MqttConnectOptions options = new MqttConnectOptions();
+        options.setAutomaticReconnect(true);
+        options.setCleanSession(true);
+        options.setConnectionTimeout(10);
+        options.setKeepAliveInterval(20);
 
-            client.subscribe(TOPIC, 1, (topic, message) -> {
-                try {
-                    String payload = new String(message.getPayload(), StandardCharsets.UTF_8).trim().replace("\0", "");
+        logger.info("Connecting to MQTT broker at {}...", brokerUrl);
+        mqttClient.connect(options);
+        logger.info("MQTT connected. ClientId={}", clientId);
 
-                    if (payload.isEmpty()) return;
+        mqttClient.subscribe(telemetryTopic, qos, (topic, message) -> {
+            try {
+                String raw = new String(message.getPayload(), StandardCharsets.UTF_8)
+                        .trim().replace("\0", "");
 
-                    logger.debug("RAW PAYLOAD on {}: {}", topic, payload);
+                if (raw.isEmpty()) return;
 
-                    JsonNode json = objectMapper.readTree(payload);
+                logger.debug("MQTT TELEMETRY on [{}]: {}", topic, raw);
 
-                    if (json.has("count") && json.has("device")) {
-                        int delta = json.get("count").asInt();
-                        String device = json.get("device").asText();
+                JsonNode json = objectMapper.readTree(raw);
 
-                        // 1. Update domain specific crowd count
-                        peopleCountService.updateCount(delta, device);
-
-                        // 2. Manage IoT device lifecycle (heartbeat)
-                        deviceService.recordHeartbeat(device);
-                        
-                        // Optional: if the hardware team ever adds "battery": 90 to the JSON payload:
-                        if (json.has("battery")) {
-                            deviceService.updateBatteryLevel(device, json.get("battery").asInt());
-                        }
-
-                        logger.info("SUCCESS | Device: {} | Delta: {} | Total: {}",
-                                device, delta, peopleCountService.getCurrentCount());
-                    } else {
-                        logger.warn("Received JSON without count/device on {}: {}", topic, payload);
-                    }
-
-                } catch (Exception e) {
-                    logger.error("FAILED to process message on {}: {}", topic, e.getMessage());
+                int schemaVersion = json.has("v") ? json.get("v").asInt() : 0;
+                if (schemaVersion > 1) {
+                    logger.warn("Unknown payload schema version {} on {}. Skipping.", schemaVersion, topic);
+                    return;
                 }
-            });
 
-            logger.info("Subscribed to wildcard topic: {}", TOPIC);
 
-            return client;
+                String deviceId;
+                if (json.has("device_id")) {
+                    deviceId = json.get("device_id").asText();
+                } else if (json.has("device")) {
+                    deviceId = json.get("device").asText();
+                } else {
+                    logger.warn("No device identifier in payload on {}: {}", topic, raw);
+                    return;
+                }
 
+                if (json.has("seq")) {
+                    int seq = json.get("seq").asInt();
+                    int missedMessages = peopleCountService.checkAndRecordSeq(deviceId, seq);
+                    if (missedMessages > 0) {
+                        logger.warn("GAP DETECTED | device={} | missed {} messages | seq={}",
+                                deviceId, missedMessages, seq);
+                    }
+                }
+
+
+                JsonNode payloadNode = json.path("payload");
+                if (payloadNode.path("misfire").asBoolean(false)) {
+                    logger.info("MISFIRE ignored from device {}", deviceId);
+                    deviceService.recordHeartbeat(deviceId);
+                    return;
+                }
+
+
+                int delta;
+                if (!payloadNode.isMissingNode() && payloadNode.has("count_delta")) {
+                    delta = payloadNode.get("count_delta").asInt();
+                } else if (json.has("count")) {
+                    delta = json.get("count").asInt();
+                } else {
+                    logger.warn("No count field in payload from device {}", deviceId);
+                    return;
+                }
+
+                JsonNode meta = json.path("meta");
+
+                if (!meta.isMissingNode() && meta.has("rssi")) {
+                    // RSSI could be stored if you add a column — for now just log it
+                    int rssi = meta.get("rssi").asInt();
+                    logger.debug("Device {} RSSI: {} dBm", deviceId, rssi);
+                }
+
+                if (!meta.isMissingNode() && meta.has("firmware")) {
+                    String firmware = meta.get("firmware").asText();
+                    deviceService.updateFirmwareVersion(deviceId, firmware);
+                }
+
+                peopleCountService.updateCount(delta, deviceId);
+
+                deviceService.recordHeartbeat(deviceId);
+
+                if (json.has("seq")) {
+                    logger.debug("Device {} seq={} delta={}", deviceId, json.get("seq").asInt(), delta);
+                }
+
+                logger.info("TELEMETRY | device={} | delta={} | totalCount={}",
+                        deviceId, delta, peopleCountService.getCurrentCount());
+
+            } catch (Exception e) {
+                logger.error("Failed to process MQTT telemetry on {}: {}", topic, e.getMessage());
+            }
+        });
+
+        mqttClient.subscribe(statusTopic, qos, (topic, message) -> {
+            try {
+                String raw = new String(message.getPayload(), StandardCharsets.UTF_8)
+                        .trim().replace("\0", "");
+
+                if (raw.isEmpty()) return;
+
+                logger.debug("MQTT STATUS on [{}]: {}", topic, raw);
+
+                JsonNode json = objectMapper.readTree(raw);
+
+                String deviceId = json.path("device_id").asText(null);
+                String status   = json.path("status").asText(null);
+                String type     = json.path("type").asText("unknown");  // "birth" or "death"
+
+                if (deviceId == null || status == null) {
+                    logger.warn("Malformed status message on {}", topic);
+                    return;
+                }
+
+                if ("online".equals(status)) {
+                    deviceService.markDeviceOnline(deviceId);
+                    logger.info("DEVICE ONLINE | device={} ({})", deviceId, type);
+
+                } else if ("offline".equals(status)) {
+                    String reason = json.path("reason").asText("unknown");
+                    deviceService.markDeviceOffline(deviceId);
+                    logger.warn("DEVICE OFFLINE | device={} | reason={} ({})", deviceId, reason, type);
+                }
+
+            } catch (Exception e) {
+                logger.error("Failed to process MQTT status on {}: {}", topic, e.getMessage());
+            }
+        });
+
+        logger.info("Subscribed to telemetry: {}", telemetryTopic);
+        logger.info("Subscribed to status:    {}", statusTopic);
+
+        return mqttClient;
+    }
+
+    @PreDestroy
+    public void disconnect() {
+        try {
+            if (mqttClient != null && mqttClient.isConnected()) {
+                mqttClient.disconnect();
+                logger.info("MQTT client disconnected cleanly on shutdown");
+            }
         } catch (Exception e) {
-            logger.error("CRITICAL ERROR initializing MQTT Client", e);
-            throw new RuntimeException("Failed to start MQTT", e);
+            logger.error("Error disconnecting MQTT client", e);
         }
     }
 }
