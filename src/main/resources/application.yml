@@ -24,6 +24,13 @@ server:
     mime-types: application/json
     min-response-size: 1024
 
+keycloak:
+  server-url: http://localhost:8080
+  realm: crowd-management
+  # Service account client (Confidential, Client Credentials grant, manage-users role)
+  admin-client-id: crowd-management-api
+  admin-client-secret: RwCtvn3HumJpfckDaJXYGzqcG4zjTcVp
+
 logging:
   level:
     org.eclipse.paho.client.mqttv3: DEBUG
