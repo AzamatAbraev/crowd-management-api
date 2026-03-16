@@ -42,6 +42,6 @@ logging:
 mqtt:
   broker-url: "tcp://172.26.164.80:1883"
   client-id-prefix: spring-backend
-  telemetry-topic: crowdmgmt/campus1/building1/floor0/ultrasonic/+/telemetry
-  status-topic: crowdmgmt/campus1/building1/floor0/ultrasonic/+/status
+  telemetry-topic: wiut/+/+/+/+/+/+/telemetry
+  status-topic: wiut/+/+/+/+/+/+/status
   qos: 1

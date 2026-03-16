@@ -71,6 +71,12 @@ public class MqttConfig {
 
                 if (raw.isEmpty()) return;
 
+                String[] parts = topic.split("/");
+                String location = "Unknown";
+                if (parts.length >= 7) {
+                    location = parts[2] + " / " + parts[3] + " / " + parts[4];
+                }
+
                 logger.debug("MQTT TELEMETRY on [{}]: {}", topic, raw);
 
                 JsonNode json = objectMapper.readTree(raw);
@@ -105,7 +111,7 @@ public class MqttConfig {
                 JsonNode payloadNode = json.path("payload");
                 if (payloadNode.path("misfire").asBoolean(false)) {
                     logger.info("MISFIRE ignored from device {}", deviceId);
-                    deviceService.recordHeartbeat(deviceId);
+                    deviceService.recordHeartbeat(deviceId, location);
                     return;
                 }
 
@@ -135,7 +141,7 @@ public class MqttConfig {
 
                 peopleCountService.updateCount(delta, deviceId);
 
-                deviceService.recordHeartbeat(deviceId);
+                deviceService.recordHeartbeat(deviceId, location);
 
                 if (json.has("seq")) {
                     logger.debug("Device {} seq={} delta={}", deviceId, json.get("seq").asInt(), delta);
@@ -155,8 +161,13 @@ public class MqttConfig {
                         .trim().replace("\0", "");
 
                 if (raw.isEmpty()) return;
-
                 logger.debug("MQTT STATUS on [{}]: {}", topic, raw);
+
+                String[] parts = topic.split("/");
+                String location = "Unknown";
+                if (parts.length >= 7) {
+                    location = parts[2] + " / " + parts[3] + " / " + parts[4];
+                }
 
                 JsonNode json = objectMapper.readTree(raw);
 
@@ -170,8 +181,8 @@ public class MqttConfig {
                 }
 
                 if ("online".equals(status)) {
-                    deviceService.markDeviceOnline(deviceId);
-                    logger.info("DEVICE ONLINE | device={} ({})", deviceId, type);
+                    deviceService.markDeviceOnline(deviceId, location);
+                    logger.info("DEVICE ONLINE | device={} location={} ({})", deviceId, location, type);
 
                 } else if ("offline".equals(status)) {
                     String reason = json.path("reason").asText("unknown");

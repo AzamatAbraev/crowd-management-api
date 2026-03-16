@@ -64,9 +64,12 @@ public class DeviceService {
         });
     }
 
-    public void recordHeartbeat(String id) {
+    public void recordHeartbeat(String id, String location) {
         deviceRepository.findById(id).ifPresentOrElse(device -> {
             device.setLastSeen(LocalDateTime.now());
+            if (device.getLocation() == null || !device.getLocation().equals(location)) {
+                device.setLocation(location);
+            }
             if (device.getStatus() == DeviceStatus.OFFLINE) {
                 device.setStatus(DeviceStatus.ONLINE);
             }
@@ -78,6 +81,7 @@ public class DeviceService {
             Device newDevice = Device.builder()
                 .id(id)
                 .name(id)
+                .location(location)
                 .type(DeviceType.UNKNOWN)
                 .status(DeviceStatus.ONLINE)
                 .health(DeviceHealth.UNKNOWN)
@@ -91,10 +95,13 @@ public class DeviceService {
         deviceRepository.deleteById(id);
     }
 
-    public void markDeviceOnline(String id) {
+    public void markDeviceOnline(String id, String location) {
         deviceRepository.findById(id).ifPresentOrElse(device -> {
             device.setStatus(DeviceStatus.ONLINE);
             device.setLastSeen(LocalDateTime.now());
+            if (device.getLocation() == null || !device.getLocation().equals(location)) {
+                device.setLocation(location);
+            }
             deviceRepository.save(device);
             logger.info("Device {} marked ONLINE via birth message", id);
         }, () -> {
@@ -103,6 +110,7 @@ public class DeviceService {
             Device newDevice = Device.builder()
                     .id(id)
                     .name(id)
+                    .location(location)
                     .type(DeviceType.UNKNOWN)
                     .status(DeviceStatus.ONLINE)
                     .health(DeviceHealth.UNKNOWN)
