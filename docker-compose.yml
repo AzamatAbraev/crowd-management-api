@@ -1,0 +1,25 @@
+services:
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+
+  influxdb3-core:
+    image: influxdb:3-core
+    user: root
+    ports:
+      - "8181:8181"
+    volumes:
+      - influxdb-storage:/var/lib/influxdb3/data
+    command:
+      - serve
+      - --without-auth
+      - --node-id=node0
+      - --object-store=file
+      - --data-dir=/var/lib/influxdb3/data
+
+volumes:
+  influxdb-storage:

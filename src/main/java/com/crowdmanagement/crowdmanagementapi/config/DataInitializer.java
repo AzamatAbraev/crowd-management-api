@@ -19,10 +19,11 @@ public class DataInitializer implements CommandLineRunner {
         if (buildingRepository.count() == 0) {
 
             List<Building> initialBuildings = List.of(
-                    new Building("LRC-BUILDING", "Learning Resource Center", "Main Library of the University"),
-                    new Building("ATB-BUILDING", "Amir Temur Building (ATB)", "One of the main building where classes are held"),
-                    new Building("IB-BUILDING", "Istiqbol Building (IB)", "The oldest building in the campus"),
-                    new Building("SHB-BUILDING", "Shakhrisabz Building (SHB)", "Mostly BIS and CS classes takes place")
+                    new Building("LRC", "Learning Resource Center", "Main Library of the University"),
+                    new Building("ATB", "Amir Temur Building", "One of the main building where classes are held"),
+                    new Building("SHB", "Shakhrisabz Building", "One of the main building where classes are held"),
+                    new Building("IB", "Istiqbol Building", "The oldest building in the campus"),
+                    new Building("Lyceum", "Academic Lyceum of Westminster University", "Mostly BIS and CS classes takes place")
             );
 
             buildingRepository.saveAll(initialBuildings);

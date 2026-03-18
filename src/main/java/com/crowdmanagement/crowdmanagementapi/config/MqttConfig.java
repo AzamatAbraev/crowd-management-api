@@ -1,6 +1,7 @@
 package com.crowdmanagement.crowdmanagementapi.config;
 
 import com.crowdmanagement.crowdmanagementapi.device.DeviceService;
+import com.crowdmanagement.crowdmanagementapi.iot.InfluxDbTelemetryService;
 import com.crowdmanagement.crowdmanagementapi.iot.PeopleCountService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,6 +24,9 @@ public class MqttConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(MqttConfig.class);
 
+    private final InfluxDbTelemetryService influxDbTelemetryService;
+
+
     @Value("${mqtt.broker-url}")
     private String brokerUrl;
 
@@ -41,7 +45,8 @@ public class MqttConfig {
     private final DeviceService deviceService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public MqttConfig(PeopleCountService peopleCountService, DeviceService deviceService) {
+    public MqttConfig(InfluxDbTelemetryService influxDbTelemetryService, PeopleCountService peopleCountService, DeviceService deviceService) {
+        this.influxDbTelemetryService = influxDbTelemetryService;
         this.peopleCountService = peopleCountService;
         this.deviceService = deviceService;
     }
@@ -142,6 +147,12 @@ public class MqttConfig {
                 peopleCountService.updateCount(delta, deviceId);
 
                 deviceService.recordHeartbeat(deviceId, location);
+
+                String buildingName = parts.length >= 3 ? parts[2] : "Unknown";
+                String floorName = parts.length >= 4 ? parts[3] : "Unknown";
+                String roomName = parts.length >= 5 ? parts[4] : "Unknown";
+
+                influxDbTelemetryService.saveTelemetry(deviceId, buildingName, floorName, roomName, delta);
 
                 if (json.has("seq")) {
                     logger.debug("Device {} seq={} delta={}", deviceId, json.get("seq").asInt(), delta);

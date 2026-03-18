@@ -45,3 +45,8 @@ mqtt:
   telemetry-topic: wiut/+/+/+/+/+/+/telemetry
   status-topic: wiut/+/+/+/+/+/+/status
   qos: 1
+
+influxdb:
+  url: http://localhost:8181
+  token: ""
+  database: telemetry
