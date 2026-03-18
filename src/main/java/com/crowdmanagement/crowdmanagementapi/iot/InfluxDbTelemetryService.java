@@ -36,7 +36,7 @@ public class InfluxDbTelemetryService {
         buffer.add(point);
     }
 
-    @Scheduled(fixedRate = 1000 * 3600) // every hour
+    @Scheduled(fixedRate = 10000)
     public void flushTelemetry() {
         if (buffer.isEmpty()) {
             return;

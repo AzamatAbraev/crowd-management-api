@@ -13,7 +13,7 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity  // enables @PreAuthorize on controller methods
+@EnableMethodSecurity
 public class SecurityConfig {
 
     @Bean
@@ -24,14 +24,8 @@ public class SecurityConfig {
         http
                 .csrf(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
-                        // ── Public / any-authenticated access ──────────────────────────
-                        // Current-user profile (accessible to every logged-in user)
                         .requestMatchers(HttpMethod.GET, "/api/v1/user/me").authenticated()
-
-                        // ── Super Admin only: full user management ──────────────────────
                         .requestMatchers("/api/v1/users/**").hasRole("theking")
-
-                        // ── Everything else: must be authenticated ───────────────────────
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
