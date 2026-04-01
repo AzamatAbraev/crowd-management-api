@@ -15,7 +15,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8080/realms/crowd-management
+          # issuer-uri: http://localhost:8080/realms/crowd-management
+          jwk-set-uri: http://keycloak-app:8080/realms/crowd-management/protocol/openid-connect/certs
 
 server:
   port: 8081
@@ -25,7 +26,7 @@ server:
     min-response-size: 1024
 
 keycloak:
-  server-url: http://localhost:8080
+  server-url: http://keycloak-app:8080
   realm: crowd-management
   # Service account client (Confidential, Client Credentials grant, manage-users role)
   admin-client-id: crowd-management-api
@@ -40,13 +41,13 @@ logging:
 #    org.springframework.integration: INFO
 
 mqtt:
-  broker-url: "tcp://172.26.164.80:1883"
+  broker-url: "tcp://mosquitto:1883"
   client-id-prefix: spring-backend
   telemetry-topic: wiut/+/+/+/+/+/+/telemetry
   status-topic: wiut/+/+/+/+/+/+/status
   qos: 1
 
 influxdb:
-  url: http://localhost:8181
+  url: http://influxdb:8181
   token: ""
   database: telemetry
