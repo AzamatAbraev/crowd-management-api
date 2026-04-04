@@ -53,8 +53,6 @@ public class MqttConfig {
 
     @Bean
     public IMqttClient mqttClient() throws Exception {
-        // Use a random suffix so multiple instances (e.g. dev + test) don't
-        // conflict on the broker. Broker rejects duplicate client IDs.
         String clientId = "spring-backend-" + UUID.randomUUID().toString().substring(0, 8);
 
         mqttClient = new MqttClient(brokerUrl, clientId, new MemoryPersistence());
@@ -134,7 +132,6 @@ public class MqttConfig {
                 JsonNode meta = json.path("meta");
 
                 if (!meta.isMissingNode() && meta.has("rssi")) {
-                    // RSSI could be stored if you add a column — for now just log it
                     int rssi = meta.get("rssi").asInt();
                     logger.debug("Device {} RSSI: {} dBm", deviceId, rssi);
                 }

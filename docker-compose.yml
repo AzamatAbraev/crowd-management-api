@@ -46,6 +46,21 @@ services:
     environment:
       - GF_SERVER_ROOT_URL=http://localhost:3000
       - GF_INSTALL_PLUGINS=grafana-influxdb-08-datasource
+
+      - GF_AUTH_GENERIC_OAUTH_ENABLED=true
+      - GF_AUTH_GENERIC_OAUTH_NAME=Keycloak
+      - GF_AUTH_GENERIC_OAUTH_ALLOW_SIGN_UP=true
+      - GF_AUTH_GENERIC_OAUTH_CLIENT_ID=grafana-oauth
+      - GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET=srktsCAfYiMYpR5Vv0dxCcCx5TsDWkDm
+      - GF_AUTH_GENERIC_OAUTH_SCOPES=openid profile email roles
+      - GF_AUTH_GENERIC_OAUTH_AUTH_URL=http://localhost:8080/realms/crowd-management/protocol/openid-connect/auth
+      - GF_AUTH_GENERIC_OAUTH_TOKEN_URL=http://keycloak-app:8080/realms/crowd-management/protocol/openid-connect/token
+      - GF_AUTH_GENERIC_OAUTH_API_URL=http://keycloak-app:8080/realms/crowd-management/protocol/openid-connect/userinfo
+
+      - GF_AUTH_OAUTH_AUTO_LOGIN=true
+
+      - GF_AUTH_GENERIC_OAUTH_ALLOW_ASSIGN_GRAFANA_ADMIN=true
+      - GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH=contains(realm_access.roles[*], 'theking') && 'GrafanaAdmin' || 'Viewer'
     volumes:
       - grafana-storage:/var/lib/grafana
 

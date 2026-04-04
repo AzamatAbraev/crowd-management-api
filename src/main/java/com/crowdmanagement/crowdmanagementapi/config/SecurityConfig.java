@@ -6,6 +6,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -27,7 +28,7 @@ public class SecurityConfig {
                 jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(new KeycloakRoleConverter());
 
                 http
-                                .csrf(csrf -> csrf.disable())
+                                .csrf(AbstractHttpConfigurer::disable)
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers(HttpMethod.GET, "/api/v1/user/me").authenticated()
                                                 .requestMatchers("/api/v1/users/**").hasRole("theking")
@@ -40,14 +41,11 @@ public class SecurityConfig {
                 return http.build();
         }
 
-        // ADDED @Bean HERE:
         @Bean
         public JwtDecoder jwtDecoder() {
-                // 1. Where to fetch keys (Internal Docker name)
                 String jwkSetUri = "http://keycloak-app:8080/realms/crowd-management/protocol/openid-connect/certs";
                 NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
 
-                // 2. What issuer to expect (What the browser saw)
                 OAuth2TokenValidator<Jwt> issuerValidator = JwtValidators
                                 .createDefaultWithIssuer("http://localhost:8080/realms/crowd-management");
 

@@ -23,11 +23,7 @@ public class KeycloakAdminConfig {
     @Value("${keycloak.admin-client-secret}")
     private String clientSecret;
 
-    /**
-     * Singleton Keycloak admin client authenticated via the Client Credentials
-     * (service account) grant. This client talks directly to the Keycloak Admin
-     * REST API — no human session required.
-     */
+
     @Bean
     public Keycloak keycloakAdminClient() {
         return KeycloakBuilder.builder()
@@ -39,10 +35,7 @@ public class KeycloakAdminConfig {
                 .build();
     }
 
-    /**
-     * Convenience bean scoped to our realm so services don't repeat
-     * .realm(name) everywhere.
-     */
+
     @Bean
     public RealmResource realmResource(Keycloak keycloakAdminClient) {
         return keycloakAdminClient.realm(realm);
