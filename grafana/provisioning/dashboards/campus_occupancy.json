@@ -1,0 +1,256 @@
+{
+  "__inputs": [],
+  "__requires": [],
+  "annotations": { "list": [] },
+  "description": "WIUT Campus People Counter – live & historical occupancy",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 10,
+      "title": "Live Overview",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "P_INFLUXDB3" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 20 },
+              { "color": "red", "value": 40 }
+            ]
+          },
+          "unit": "short",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
+      "id": 1,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "title": "Total People on Campus",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "P_INFLUXDB3" },
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "format": "table",
+          "url": "http://influxdb:8181/api/v3/query_sql?db=telemetry&q=SELECT%20SUM(count)%20AS%20value%20FROM%20(SELECT%20deviceId%2C%20LAST(count)%20AS%20count%20FROM%20occupancy%20WHERE%20time%20%3E%3D%20now()%20-%20interval%20'5%20minutes'%20GROUP%20BY%20deviceId)&format=json",
+          "url_options": { "method": "GET", "data": "" },
+          "columns": [{ "selector": "value", "text": "value", "type": "number" }],
+          "root_selector": ""
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "P_INFLUXDB3" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 20 },
+              { "color": "red", "value": 40 }
+            ]
+          },
+          "unit": "short",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 20, "x": 4, "y": 1 },
+      "id": 2,
+      "options": {
+        "displayMode": "gradient",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "orientation": "horizontal",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "showUnfilled": true
+      },
+      "title": "People Count by Building (last 5 min)",
+      "type": "bargauge",
+      "targets": [
+        {
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "P_INFLUXDB3" },
+          "refId": "B",
+          "type": "json",
+          "source": "url",
+          "format": "table",
+          "url": "http://influxdb:8181/api/v3/query_sql?db=telemetry&q=SELECT%20building%2C%20SUM(count)%20AS%20people%20FROM%20(SELECT%20building%2C%20deviceId%2C%20LAST(count)%20AS%20count%20FROM%20occupancy%20WHERE%20time%20%3E%3D%20now()%20-%20interval%20'5%20minutes'%20GROUP%20BY%20building%2C%20deviceId)%20GROUP%20BY%20building%20ORDER%20BY%20building&format=json",
+          "url_options": { "method": "GET", "data": "" },
+          "columns": [
+            { "selector": "building", "text": "building", "type": "string" },
+            { "selector": "people", "text": "people", "type": "number" }
+          ],
+          "root_selector": ""
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "id": 11,
+      "title": "Historical Trends",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "P_INFLUXDB3" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" }
+          },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "unit": "short",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 6 },
+      "id": 3,
+      "options": {
+        "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "title": "People Count Over Time – per Building",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "P_INFLUXDB3" },
+          "refId": "C",
+          "type": "json",
+          "source": "url",
+          "format": "timeseries",
+          "url": "http://influxdb:8181/api/v3/query_sql?db=telemetry&q=SELECT%20DATE_BIN(INTERVAL%20'1%20minute'%2C%20time%2C%20TIMESTAMP%20'1970-01-01')%20AS%20time%2C%20building%2C%20SUM(count)%20AS%20count%20FROM%20occupancy%20WHERE%20time%20%3E%3D%20now()%20-%20interval%20'1%20hour'%20GROUP%20BY%201%2C%20building%20ORDER%20BY%201&format=json",
+          "url_options": { "method": "GET", "data": "" },
+          "columns": [
+            { "selector": "time", "text": "time", "type": "timestamp" },
+            { "selector": "building", "text": "building", "type": "string" },
+            { "selector": "count", "text": "Value", "type": "number" }
+          ],
+          "root_selector": ""
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 15 },
+      "id": 12,
+      "title": "Room Detail",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "P_INFLUXDB3" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 20 },
+              { "color": "red", "value": 40 }
+            ]
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": { "type": "auto" },
+            "inspect": false
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "count" },
+            "properties": [
+              { "id": "unit", "value": "short" },
+              { "id": "custom.width", "value": 120 },
+              { "id": "custom.cellOptions", "value": { "mode": "gradient", "type": "gauge" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "time" },
+            "properties": [{ "id": "custom.hidden", "value": true }]
+          }
+        ]
+      },
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 16 },
+      "id": 4,
+      "options": {
+        "cellHeight": "sm",
+        "footer": { "countRows": false, "fields": "", "reducer": ["sum"], "show": false },
+        "showHeader": true,
+        "sortBy": [{ "desc": true, "displayName": "count" }]
+      },
+      "title": "Room-level People Count (latest per device)",
+      "type": "table",
+      "targets": [
+        {
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "P_INFLUXDB3" },
+          "refId": "D",
+          "type": "json",
+          "source": "url",
+          "format": "table",
+          "url": "http://influxdb:8181/api/v3/query_sql?db=telemetry&q=SELECT%20building%2C%20floor%2C%20room%2C%20deviceId%2C%20LAST(count)%20AS%20count%20FROM%20occupancy%20WHERE%20time%20%3E%3D%20now()%20-%20interval%20'5%20minutes'%20GROUP%20BY%20building%2C%20floor%2C%20room%2C%20deviceId%20ORDER%20BY%20building%2C%20floor%2C%20room&format=json",
+          "url_options": { "method": "GET", "data": "" },
+          "columns": [
+            { "selector": "building", "text": "building", "type": "string" },
+            { "selector": "floor", "text": "floor", "type": "string" },
+            { "selector": "room", "text": "room", "type": "string" },
+            { "selector": "deviceId", "text": "deviceId", "type": "string" },
+            { "selector": "count", "text": "count", "type": "number" }
+          ],
+          "root_selector": ""
+        }
+      ]
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 38,
+  "tags": ["people-counter", "wiut", "occupancy"],
+  "templating": { "list": [] },
+  "time": { "from": "now-1h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "WIUT Campus Occupancy",
+  "uid": "wiut-campus-occ",
+  "version": 1
+}

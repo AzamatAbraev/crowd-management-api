@@ -45,7 +45,9 @@ services:
       - "3000:3000"
     environment:
       - GF_SERVER_ROOT_URL=http://localhost:3000
-      - GF_INSTALL_PLUGINS=grafana-influxdb-08-datasource
+      - GF_INSTALL_PLUGINS=yesoreyeram-infinity-datasource
+
+      - GF_SECURITY_ALLOW_EMBEDDING=true
 
       - GF_AUTH_GENERIC_OAUTH_ENABLED=true
       - GF_AUTH_GENERIC_OAUTH_NAME=Keycloak
@@ -58,11 +60,13 @@ services:
       - GF_AUTH_GENERIC_OAUTH_API_URL=http://keycloak-app:8080/realms/crowd-management/protocol/openid-connect/userinfo
 
       - GF_AUTH_OAUTH_AUTO_LOGIN=true
+      - GF_AUTH_SIGNOUT_REDIRECT_URL=http://localhost:8082/logout
 
       - GF_AUTH_GENERIC_OAUTH_ALLOW_ASSIGN_GRAFANA_ADMIN=true
       - GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH=contains(realm_access.roles[*], 'theking') && 'GrafanaAdmin' || 'Viewer'
     volumes:
       - grafana-storage:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
 
 volumes:
   influxdb-storage:
