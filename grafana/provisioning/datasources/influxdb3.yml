@@ -7,6 +7,8 @@ datasources:
     access: proxy
     isDefault: true
     version: 1
-    editable: false
+    editable: true
     jsonData:
       tlsSkipVerify: true
+      allowedHosts:
+        - "http://influxdb:8181"

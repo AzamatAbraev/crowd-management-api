@@ -54,8 +54,8 @@
           "type": "json",
           "source": "url",
           "format": "table",
-          "url": "http://influxdb:8181/api/v3/query_sql?db=telemetry&q=SELECT%20SUM(count)%20AS%20value%20FROM%20(SELECT%20deviceId%2C%20LAST(count)%20AS%20count%20FROM%20occupancy%20WHERE%20time%20%3E%3D%20now()%20-%20interval%20'5%20minutes'%20GROUP%20BY%20deviceId)&format=json",
-          "url_options": { "method": "GET", "data": "" },
+          "url": "http://influxdb:8181/api/v3/query_sql?db=telemetry&q=SELECT%20SUM%28count%29%20AS%20value%20FROM%20%28SELECT%20%22deviceId%22%2C%20count%20FROM%20%28SELECT%20%22deviceId%22%2C%20count%2C%20ROW_NUMBER%28%29%20OVER%20%28PARTITION%20BY%20%22deviceId%22%20ORDER%20BY%20time%20DESC%29%20as%20rn%20FROM%20occupancy%20WHERE%20time%20%3E%3D%20now%28%29%20-%20interval%20%275%20minutes%27%29%20tmp%20WHERE%20rn%20%3D%201%29&format=json",
+          "url_options": { "method": "GET", "data": "", "headers": [{ "key": "Accept", "value": "application/json" }] },
           "columns": [{ "selector": "value", "text": "value", "type": "number" }],
           "root_selector": ""
         }
@@ -98,8 +98,8 @@
           "type": "json",
           "source": "url",
           "format": "table",
-          "url": "http://influxdb:8181/api/v3/query_sql?db=telemetry&q=SELECT%20building%2C%20SUM(count)%20AS%20people%20FROM%20(SELECT%20building%2C%20deviceId%2C%20LAST(count)%20AS%20count%20FROM%20occupancy%20WHERE%20time%20%3E%3D%20now()%20-%20interval%20'5%20minutes'%20GROUP%20BY%20building%2C%20deviceId)%20GROUP%20BY%20building%20ORDER%20BY%20building&format=json",
-          "url_options": { "method": "GET", "data": "" },
+          "url": "http://influxdb:8181/api/v3/query_sql?db=telemetry&q=SELECT%20building%2C%20SUM%28count%29%20AS%20people%20FROM%20%28SELECT%20building%2C%20%22deviceId%22%2C%20count%20FROM%20%28SELECT%20building%2C%20%22deviceId%22%2C%20count%2C%20ROW_NUMBER%28%29%20OVER%20%28PARTITION%20BY%20%22deviceId%22%20ORDER%20BY%20time%20DESC%29%20as%20rn%20FROM%20occupancy%20WHERE%20time%20%3E%3D%20now%28%29%20-%20interval%20%275%20minutes%27%29%20tmp%20WHERE%20rn%20%3D%201%29%20GROUP%20BY%20building%20ORDER%20BY%20building&format=json",
+          "url_options": { "method": "GET", "data": "", "headers": [{ "key": "Accept", "value": "application/json" }] },
           "columns": [
             { "selector": "building", "text": "building", "type": "string" },
             { "selector": "people", "text": "people", "type": "number" }
@@ -161,7 +161,7 @@
           "source": "url",
           "format": "timeseries",
           "url": "http://influxdb:8181/api/v3/query_sql?db=telemetry&q=SELECT%20DATE_BIN(INTERVAL%20'1%20minute'%2C%20time%2C%20TIMESTAMP%20'1970-01-01')%20AS%20time%2C%20building%2C%20SUM(count)%20AS%20count%20FROM%20occupancy%20WHERE%20time%20%3E%3D%20now()%20-%20interval%20'1%20hour'%20GROUP%20BY%201%2C%20building%20ORDER%20BY%201&format=json",
-          "url_options": { "method": "GET", "data": "" },
+          "url_options": { "method": "GET", "data": "", "headers": [{ "key": "Accept", "value": "application/json" }] },
           "columns": [
             { "selector": "time", "text": "time", "type": "timestamp" },
             { "selector": "building", "text": "building", "type": "string" },
@@ -229,8 +229,8 @@
           "type": "json",
           "source": "url",
           "format": "table",
-          "url": "http://influxdb:8181/api/v3/query_sql?db=telemetry&q=SELECT%20building%2C%20floor%2C%20room%2C%20deviceId%2C%20LAST(count)%20AS%20count%20FROM%20occupancy%20WHERE%20time%20%3E%3D%20now()%20-%20interval%20'5%20minutes'%20GROUP%20BY%20building%2C%20floor%2C%20room%2C%20deviceId%20ORDER%20BY%20building%2C%20floor%2C%20room&format=json",
-          "url_options": { "method": "GET", "data": "" },
+          "url": "http://influxdb:8181/api/v3/query_sql?db=telemetry&q=SELECT%20building%2C%20floor%2C%20room%2C%20%22deviceId%22%2C%20count%20FROM%20%28SELECT%20building%2C%20floor%2C%20room%2C%20%22deviceId%22%2C%20count%2C%20ROW_NUMBER%28%29%20OVER%20%28PARTITION%20BY%20%22deviceId%22%20ORDER%20BY%20time%20DESC%29%20as%20rn%20FROM%20occupancy%20WHERE%20time%20%3E%3D%20now%28%29%20-%20interval%20%275%20minutes%27%29%20tmp%20WHERE%20rn%20%3D%201%20ORDER%20BY%20building%2C%20floor%2C%20room&format=json",
+          "url_options": { "method": "GET", "data": "", "headers": [{ "key": "Accept", "value": "application/json" }] },
           "columns": [
             { "selector": "building", "text": "building", "type": "string" },
             { "selector": "floor", "text": "floor", "type": "string" },
@@ -252,5 +252,5 @@
   "timezone": "browser",
   "title": "WIUT Campus Occupancy",
   "uid": "wiut-campus-occ",
-  "version": 1
+  "version": 2
 }
