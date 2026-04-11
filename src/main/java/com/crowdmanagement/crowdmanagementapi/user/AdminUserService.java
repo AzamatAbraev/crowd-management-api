@@ -24,7 +24,6 @@ public class AdminUserService {
         this.realmResource = realmResource;
     }
 
-
     public List<UserRepresentationDto> getAllUsers() {
         return realmResource.users().list(0, 1000)
                 .stream()
@@ -32,14 +31,12 @@ public class AdminUserService {
                 .collect(Collectors.toList());
     }
 
-
     public List<UserRepresentationDto> searchUsers(String query) {
         return realmResource.users().search(query, 0, 200)
                 .stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
-
 
     public UserRepresentationDto getUserById(String userId) {
         try {
@@ -50,7 +47,6 @@ public class AdminUserService {
                     "User not found with id: " + userId);
         }
     }
-
 
     public String createUser(CreateUserRequest request) {
         UserRepresentation user = new UserRepresentation();
@@ -68,9 +64,8 @@ public class AdminUserService {
 
         try (Response response = realmResource.users().create(user)) {
             if (response.getStatus() == 201) {
-                // Location header: /admin/realms/{realm}/users/{uuid}
                 String location = response.getHeaderString("Location");
-                return location.replaceAll(".*/", ""); // extract UUID
+                return location.replaceAll(".*/", "");
             } else if (response.getStatus() == 409) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT,
                         "Username or email already exists");
@@ -81,18 +76,19 @@ public class AdminUserService {
         }
     }
 
-
     public void updateUser(String userId, UpdateUserRequest request) {
         UserResource userResource = getUserResource(userId);
         UserRepresentation user = userResource.toRepresentation();
 
-        if (request.firstName() != null) user.setFirstName(request.firstName());
-        if (request.lastName()  != null) user.setLastName(request.lastName());
-        if (request.email()     != null) user.setEmail(request.email());
+        if (request.firstName() != null)
+            user.setFirstName(request.firstName());
+        if (request.lastName() != null)
+            user.setLastName(request.lastName());
+        if (request.email() != null)
+            user.setEmail(request.email());
 
         userResource.update(user);
     }
-
 
     public void setUserEnabled(String userId, boolean enabled) {
         UserResource userResource = getUserResource(userId);
@@ -101,13 +97,11 @@ public class AdminUserService {
         userResource.update(user);
     }
 
-
     public void resetPassword(String userId, ResetPasswordRequest request) {
         CredentialRepresentation credential = buildCredential(
                 request.newPassword(), request.temporary());
         getUserResource(userId).resetPassword(credential);
     }
-
 
     public void deleteUser(String userId) {
         try (Response response = realmResource.users().delete(userId)) {
@@ -117,7 +111,6 @@ public class AdminUserService {
             }
         }
     }
-
 
     public List<String> getUserRoles(String userId) {
         return getUserResource(userId)
@@ -129,7 +122,6 @@ public class AdminUserService {
                 .collect(Collectors.toList());
     }
 
-
     public void assignRole(String userId, String roleName) {
         RoleRepresentation role = getRealmRole(roleName);
         getUserResource(userId)
@@ -137,7 +129,6 @@ public class AdminUserService {
                 .realmLevel()
                 .add(Collections.singletonList(role));
     }
-
 
     public void removeRole(String userId, String roleName) {
         RoleRepresentation role = getRealmRole(roleName);
@@ -147,7 +138,6 @@ public class AdminUserService {
                 .remove(Collections.singletonList(role));
     }
 
-
     public List<String> getAllRealmRoles() {
         return realmResource.roles()
                 .list()
@@ -155,7 +145,6 @@ public class AdminUserService {
                 .map(RoleRepresentation::getName)
                 .collect(Collectors.toList());
     }
-    
 
     private UserResource getUserResource(String userId) {
         try {
@@ -202,7 +191,6 @@ public class AdminUserService {
                 u.getLastName(),
                 u.getEmail(),
                 Boolean.TRUE.equals(u.isEnabled()),
-                roles
-        );
+                roles);
     }
 }

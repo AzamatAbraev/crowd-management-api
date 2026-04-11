@@ -47,31 +47,42 @@ public class TimetableXml {
 
 }
 
-@Data @JsonIgnoreProperties(ignoreUnknown = true)
+@Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 class XmlTeacher {
-    @JacksonXmlProperty(isAttribute = true) private String id;
-    @JacksonXmlProperty(isAttribute = true) private String name;
+    @JacksonXmlProperty(isAttribute = true)
+    private String id;
+    @JacksonXmlProperty(isAttribute = true)
+    private String name;
 }
 
-@Data @JsonIgnoreProperties(ignoreUnknown = true)
+@Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 class XmlGroup {
-    @JacksonXmlProperty(isAttribute = true) private String id;
-    @JacksonXmlProperty(isAttribute = true) private String name;
+    @JacksonXmlProperty(isAttribute = true)
+    private String id;
+    @JacksonXmlProperty(isAttribute = true)
+    private String name;
 }
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 class XmlPeriod {
-    @JacksonXmlProperty(isAttribute = true) private String period;
-    @JacksonXmlProperty(isAttribute = true) private String starttime;
-    @JacksonXmlProperty(isAttribute = true) private String endtime;
+    @JacksonXmlProperty(isAttribute = true)
+    private String period;
+    @JacksonXmlProperty(isAttribute = true)
+    private String starttime;
+    @JacksonXmlProperty(isAttribute = true)
+    private String endtime;
 }
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 class XmlClassroom {
-    @JacksonXmlProperty(isAttribute = true) private String id;
-    @JacksonXmlProperty(isAttribute = true) private String name;
+    @JacksonXmlProperty(isAttribute = true)
+    private String id;
+    @JacksonXmlProperty(isAttribute = true)
+    private String name;
     @JacksonXmlProperty(isAttribute = true, localName = "short")
     private String shortName;
 }
@@ -79,39 +90,54 @@ class XmlClassroom {
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 class XmlClass {
-    @JacksonXmlProperty(isAttribute = true) private String id;
-    @JacksonXmlProperty(isAttribute = true) private String name;
+    @JacksonXmlProperty(isAttribute = true)
+    private String id;
+    @JacksonXmlProperty(isAttribute = true)
+    private String name;
 }
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 class XmlDaysDef {
-    @JacksonXmlProperty(isAttribute = true) private String name;
-    @JacksonXmlProperty(isAttribute = true) private String days;
+    @JacksonXmlProperty(isAttribute = true)
+    private String name;
+    @JacksonXmlProperty(isAttribute = true)
+    private String days;
 }
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 class XmlSubject {
-    @JacksonXmlProperty(isAttribute = true) private String id;
-    @JacksonXmlProperty(isAttribute = true) private String name;
+    @JacksonXmlProperty(isAttribute = true)
+    private String id;
+    @JacksonXmlProperty(isAttribute = true)
+    private String name;
 }
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 class XmlLesson {
-    @JacksonXmlProperty(isAttribute = true) private String id;
-    @JacksonXmlProperty(isAttribute = true) private String subjectid;
-    @JacksonXmlProperty(isAttribute = true) private String classids;   // Multiple IDs possible
-    @JacksonXmlProperty(isAttribute = true) private String teacherids; // Multiple IDs possible
-    @JacksonXmlProperty(isAttribute = true) private String groupids;
+    @JacksonXmlProperty(isAttribute = true)
+    private String id;
+    @JacksonXmlProperty(isAttribute = true)
+    private String subjectid;
+    @JacksonXmlProperty(isAttribute = true)
+    private String classids;
+    @JacksonXmlProperty(isAttribute = true)
+    private String teacherids;
+    @JacksonXmlProperty(isAttribute = true)
+    private String groupids;
 }
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 class XmlCard {
-    @JacksonXmlProperty(isAttribute = true) private String lessonid;
-    @JacksonXmlProperty(isAttribute = true) private String period;
-    @JacksonXmlProperty(isAttribute = true) private String days;
-    @JacksonXmlProperty(isAttribute = true) private String classroomids;
+    @JacksonXmlProperty(isAttribute = true)
+    private String lessonid;
+    @JacksonXmlProperty(isAttribute = true)
+    private String period;
+    @JacksonXmlProperty(isAttribute = true)
+    private String days;
+    @JacksonXmlProperty(isAttribute = true)
+    private String classroomids;
 }

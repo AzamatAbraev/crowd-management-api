@@ -14,7 +14,6 @@ import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
-// CORRECT IMPORT HERE:
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 
 @Configuration

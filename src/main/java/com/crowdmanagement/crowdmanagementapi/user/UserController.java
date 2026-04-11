@@ -15,7 +15,6 @@ public class UserController {
 
     @GetMapping("/me")
     public Map<String, Object> getCurrentUser(@AuthenticationPrincipal Jwt jwt) {
-        // Extract realm roles from Keycloak JWT format
         Map<String, Object> realmAccess = jwt.getClaimAsMap("realm_access");
         List<String> roles = (List<String>) realmAccess.get("roles");
 
@@ -23,8 +22,6 @@ public class UserController {
                 "username", jwt.getClaimAsString("preferred_username"),
                 "firstName", jwt.getClaimAsString("given_name"),
                 "lastName", jwt.getClaimAsString("family_name"),
-                "roles", roles
-        );
+                "roles", roles);
     }
 }
-

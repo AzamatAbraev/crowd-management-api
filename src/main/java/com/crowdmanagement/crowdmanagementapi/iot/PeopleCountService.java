@@ -14,7 +14,6 @@ public class PeopleCountService {
     private final ConcurrentHashMap<String, Integer> deviceCounts = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Integer> deviceLastSeq = new ConcurrentHashMap<>();
 
-
     @Getter
     private String lastDeviceName = "None";
 
@@ -43,11 +42,10 @@ public class PeopleCountService {
 
     public int checkAndRecordSeq(String deviceId, int seq) {
         Integer lastSeq = deviceLastSeq.put(deviceId, seq);
-        if (lastSeq == null) return 0;           // first message from this device
+        if (lastSeq == null)
+            return 0;
         int gap = seq - lastSeq - 1;
         if (gap > 0) {
-            // Log at WARN level — this is useful diagnostics information
-            // that your ops team would care about
         }
         return Math.max(0, gap);
     }

@@ -76,7 +76,6 @@ public class DeviceService {
             deviceRepository.save(device);
             logger.debug("Recorded heartbeat and set ONLINE for device {}", id);
         }, () -> {
-            // Auto-provision basic entry if unknown device sends data via Mqtt
             logger.info("Auto-provisioning newly discovered device: {}", id);
             Device newDevice = Device.builder()
                 .id(id)
@@ -105,7 +104,6 @@ public class DeviceService {
             deviceRepository.save(device);
             logger.info("Device {} marked ONLINE via birth message", id);
         }, () -> {
-            // Unknown device came online — auto-provision it
             logger.info("Auto-provisioning new online device: {}", id);
             Device newDevice = Device.builder()
                     .id(id)
@@ -126,15 +124,11 @@ public class DeviceService {
             deviceRepository.save(device);
             logger.warn("Device {} marked OFFLINE via death/LWT message", id);
         });
-        // If device is not in DB yet, we simply ignore the offline message —
-        // no point creating a record just to immediately mark it offline.
     }
 
     public void updateFirmwareVersion(String id, String firmware) {
         if (firmware == null || firmware.isBlank()) return;
         deviceRepository.findById(id).ifPresent(device -> {
-            // Only update and save if the version actually changed — avoid
-            // unnecessary DB writes on every single MQTT message
             if (!firmware.equals(device.getFirmwareVersion())) {
                 device.setFirmwareVersion(firmware);
                 deviceRepository.save(device);

@@ -12,7 +12,6 @@ services:
       - INFLUXDB_URL=http://influxdb:8181
       - MQTT_BROKER_URL=tcp://mosquitto:1883
       - KEYCLOAK_SERVER_URL=http://keycloak-app:8080
-      # - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak-app:8080/realms/crowd-management
     volumes:
       - ./src/main/resources/timetable.xml:/app/src/main/resources/timetable.xml
     ports:

@@ -15,7 +15,6 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          # issuer-uri: http://localhost:8080/realms/crowd-management
           jwk-set-uri: http://keycloak-app:8080/realms/crowd-management/protocol/openid-connect/certs
 
 server:
@@ -28,7 +27,6 @@ server:
 keycloak:
   server-url: http://keycloak-app:8080
   realm: crowd-management
-  # Service account client (Confidential, Client Credentials grant, manage-users role)
   admin-client-id: crowd-management-api
   admin-client-secret: RwCtvn3HumJpfckDaJXYGzqcG4zjTcVp
 
@@ -36,9 +34,6 @@ logging:
   level:
     org.eclipse.paho.client.mqttv3: DEBUG
     org.springframework.integration.mqtt: DEBUG
-#    com.crowdmanagement: DEBUG
-#    org.eclipse.paho: INFO
-#    org.springframework.integration: INFO
 
 mqtt:
   broker-url: "tcp://mosquitto:1883"

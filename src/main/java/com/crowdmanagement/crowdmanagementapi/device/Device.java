@@ -25,7 +25,7 @@ public class Device {
 
     @Id
     @Column(nullable = false, unique = true)
-    private String id; // MAC Address or unique serial number
+    private String id;
 
     @Column(nullable = false)
     private String name;
@@ -46,8 +46,8 @@ public class Device {
     @Column(nullable = false)
     private DeviceHealth health = DeviceHealth.UNKNOWN;
 
-    private Integer batteryLevel; // Percentage, can be null for wired devices
-    
+    private Integer batteryLevel;
+
     @Convert(converter = StringListConverter.class)
     @Column(columnDefinition = "TEXT")
     private List<String> sensors;
@@ -89,7 +89,8 @@ class StringListConverter implements AttributeConverter<List<String>, String> {
     @Override
     public List<String> convertToEntityAttribute(String dbData) {
         try {
-            return dbData != null ? mapper.readValue(dbData, new TypeReference<>() {}) : List.of();
+            return dbData != null ? mapper.readValue(dbData, new TypeReference<>() {
+            }) : List.of();
         } catch (JsonProcessingException e) {
             return List.of();
         }
@@ -112,7 +113,8 @@ class MapConverter implements AttributeConverter<Map<String, Object>, String> {
     @Override
     public Map<String, Object> convertToEntityAttribute(String dbData) {
         try {
-            return dbData != null ? mapper.readValue(dbData, new TypeReference<>() {}) : new HashMap<>();
+            return dbData != null ? mapper.readValue(dbData, new TypeReference<>() {
+            }) : new HashMap<>();
         } catch (JsonProcessingException e) {
             return new HashMap<>();
         }
