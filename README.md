@@ -1,3 +1,7 @@
+This service is part of the [Crowd Management                            System](https://github.com/AzamatAbraev/crowd-management-system)
+  monorepo.   
+
+
 # Crowd Management API
 
 The core backend service. It subscribes to MQTT telemetry from IoT sensors, maintains real-time occupancy counts, stores historical data in InfluxDB, exposes a REST API consumed by the gateway, and pushes live updates to connected frontends.
