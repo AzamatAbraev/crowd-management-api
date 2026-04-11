@@ -1,5 +1,5 @@
- > **This service is part of the [Crowd Management                        System](https://github.com/AzamatAbraev/crowd-management-system) — 
-  clone the monorepo to get the full system.** 
+ >[!IMPORTANT]                                                           > This service is part of the [Crowd Management                        
+  System](https://github.com/AzamatAbraev/crowd-management-system)         monorepo. Clone the full system from there — do not clone this repo      individually. 
 
 
 # Crowd Management API
