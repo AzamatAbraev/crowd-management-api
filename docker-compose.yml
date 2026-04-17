@@ -1,14 +1,36 @@
 services:
+  crowd-management-db:
+    image: postgres:15
+    container_name: crowd-management-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-crowd_management}
+      POSTGRES_USER: ${DB_USER:-crowd_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-crowd_password}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-crowd_user} -d ${DB_NAME:-crowd_management}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - crowd-management-db-storage:/var/lib/postgresql/data
+
   crowd-management-api:
     build: .
     container_name: crowd-management-api
     restart: unless-stopped
     depends_on:
+      crowd-management-db:
+        condition: service_healthy
       influxdb:
         condition: service_started
     external_links:
       - keycloak_app
     environment:
+      - DB_HOST=crowd-management-db
+      - DB_NAME=${DB_NAME:-crowd_management}
+      - DB_USER=${DB_USER:-crowd_user}
+      - DB_PASSWORD=${DB_PASSWORD:-crowd_password}
       - INFLUXDB_URL=http://influxdb:8181
       - MQTT_BROKER_URL=tcp://mosquitto:1883
       - KEYCLOAK_SERVER_URL=http://keycloak-app:8080
@@ -68,6 +90,7 @@ services:
       - ./grafana/provisioning:/etc/grafana/provisioning
 
 volumes:
+  crowd-management-db-storage:
   influxdb-storage:
   grafana-storage:
 

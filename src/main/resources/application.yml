@@ -2,6 +2,17 @@ spring:
   application:
     name: crowd-management-api
 
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:5432/${DB_NAME:crowd_management}
+    username: ${DB_USER:crowd_user}
+    password: ${DB_PASSWORD:crowd_password}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+
   jackson:
     deserialization:
       fail-on-unknown-properties: false
