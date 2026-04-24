@@ -94,4 +94,68 @@ public class AnalyticsService {
                 """;
         return executeParametrizedQuery(sql, Map.of("room", room));
     }
+
+    public List<String> getDistinctBuildings() {
+        String sql = """
+                SELECT building FROM "occupancy"
+                WHERE time >= now() - interval '91 days'
+                GROUP BY building
+                """;
+        try (Stream<Object[]> stream = influxDBClient.query(sql)) {
+            return stream
+                    .filter(row -> row[0] != null)
+                    .map(row -> row[0].toString())
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            System.err.println("getDistinctBuildings failed: " + e.getMessage());
+            return List.of();
+        }
+    }
+
+    public List<AnalyticsResponse> getBuildingLast7Days(String building) {
+        String sql = """
+                SELECT date_bin(interval '1 day', time) as time_bucket, AVG(count) as avg_count
+                FROM "occupancy"
+                WHERE building = $building AND time >= now() - interval '7 days'
+                GROUP BY time_bucket ORDER BY time_bucket ASC
+                """;
+        return executeParametrizedQuery(sql, Map.of("building", building));
+    }
+
+    public List<AnalyticsResponse> getBuildingLast30Days(String building) {
+        String sql = """
+                SELECT date_bin(interval '1 day', time) as time_bucket, AVG(count) as avg_count
+                FROM "occupancy"
+                WHERE building = $building AND time >= now() - interval '30 days'
+                GROUP BY time_bucket ORDER BY time_bucket ASC
+                """;
+        return executeParametrizedQuery(sql, Map.of("building", building));
+    }
+
+    public List<AnalyticsResponse> getBuildingLast90Days(String building) {
+        String sql = """
+                SELECT date_bin(interval '7 days', time) as time_bucket, AVG(count) as avg_count
+                FROM "occupancy"
+                WHERE building = $building AND time >= now() - interval '90 days'
+                GROUP BY time_bucket ORDER BY time_bucket ASC
+                """;
+        return executeParametrizedQuery(sql, Map.of("building", building));
+    }
+
+    public record DataStatus(boolean hasRealData, boolean hasDemoData) {}
+
+    public DataStatus getDataStatus() {
+        boolean hasRealData;
+        try (var stream = influxDBClient.query(
+                "SELECT COUNT(count) as cnt FROM \"occupancy\" " +
+                "WHERE time >= now() - interval '7 days'")) {
+            hasRealData = stream.findFirst()
+                    .map(row -> row[0] instanceof Number n && n.longValue() >= 5)
+                    .orElse(false);
+        } catch (Exception e) {
+            System.err.println("getDataStatus failed: " + e.getMessage());
+            hasRealData = false;
+        }
+        return new DataStatus(hasRealData, false);
+    }
 }
