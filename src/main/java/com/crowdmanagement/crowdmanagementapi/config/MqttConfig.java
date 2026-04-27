@@ -149,7 +149,8 @@ public class MqttConfig {
                 String floorName = parts.length >= 4 ? parts[3] : "Unknown";
                 String roomName = parts.length >= 5 ? parts[4] : "Unknown";
 
-                influxDbTelemetryService.saveTelemetry(deviceId, buildingName, floorName, roomName, delta);
+                int deviceCount = peopleCountService.getDeviceCounts().getOrDefault(deviceId, 0);
+                influxDbTelemetryService.saveTelemetry(deviceId, buildingName, floorName, roomName, deviceCount);
 
                 if (json.has("seq")) {
                     logger.debug("Device {} seq={} delta={}", deviceId, json.get("seq").asInt(), delta);
